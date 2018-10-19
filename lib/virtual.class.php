@@ -139,17 +139,24 @@ class Virtual extends VacationDriver {
         }
 
         // (Re)enable the vacation transport alias
-        if (!$this->enable) {
-            return true;
-        } elseif ($this->body == "" || $this->subject == "") {
-            rcube::raise_error(array('code' => 601, 'type' => 'db', 'file' => __FILE__,
-                    'message' => "Vacation plugin: Missing Subject or Body.<br/><br/>" . $error
-                ), true, true);
+        if ($this->enable && $this->body != "" && $this->subject != "") {
+            $aliasArr[] = '%g';
         }
 
+        $aliasArr[] = '%e';
+
         // Set a forward
-        if ($this->forward != null) {
+        if ($this->enable && $this->forward != null) {
             $aliasArr[] = '%f';
+        }
+
+        // Aliases are re-created if $sqlArr is not empty.
+        $sql = $this->translate($this->cfg['delete_query']);
+        $this->db->query($sql);
+
+        // One row to store all aliases
+        if (!empty($aliasArr)) {
+
             $alias = join(",", $aliasArr);
             $sql = str_replace('%g', $alias, $this->cfg['insert_query']);
             $sql = $this->translate($sql);
