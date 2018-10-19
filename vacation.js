@@ -39,7 +39,6 @@ if (window.rcmail) {
     $('#vacation_activefrom').flatpickr({
 	plugins: [new rangePlugin({ input: '#vacation_activeuntil'})],
         enableTime: true,
-        minDate: 'today',
         time_24hr: true,
         dateFormat: 'Y-m-d H:i:S'
     });
