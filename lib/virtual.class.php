@@ -139,45 +139,17 @@ class Virtual extends VacationDriver {
         }
 
         // (Re)enable the vacation transport alias
-        if ($this->enable && $this->body != "" && $this->subject != "") {
-            $aliasArr[] = '%g';
-        } else {
-            // Delete the alias for the vacation transport (Postfix)
-            $sql = $this->translate($this->cfg['delete_query']);
-
-            $this->db->query($sql);
-            if ($error = $this->db->is_error()) {
-                if (strpos($error, "no such field")) {
-                    $error = " Configure either domain_lookup_query or use %d in config.ini's delete_query rather than %i. <br/><br/>";
-                }
-
-                rcube::raise_error(array('code' => 601, 'type' => 'db', 'file' => __FILE__,
-                            'message' => "Vacation plugin: Error while saving records to {$this->cfg['dbase']}.vacation table. <br/><br/>" . $error
-                        ), true, true);
-
-            }
+        if (!$this->enable) {
             return true;
+        } elseif ($this->body == "" || $this->subject == "") {
+            rcube::raise_error(array('code' => 601, 'type' => 'db', 'file' => __FILE__,
+                    'message' => "Vacation plugin: Missing Subject or Body.<br/><br/>" . $error
+                ), true, true);
         }
-
-
-        // Keep a copy of the mail if explicitly asked for or when using vacation
-        /*$always = (isset($this->cfg['always_keep_copy']) && $this->cfg['always_keep_copy']);
-        if ($this->keepcopy || in_array('%g', $aliasArr) || $always) {
-            $aliasArr[] = '%e';
-        }*/
 
         // Set a forward
         if ($this->forward != null) {
             $aliasArr[] = '%f';
-        }
-
-        // Aliases are re-created if $sqlArr is not empty.
-        $sql = $this->translate($this->cfg['delete_query']);
-        $this->db->query($sql);
-
-        // One row to store all aliases
-        if (!empty($aliasArr)) {
-
             $alias = join(",", $aliasArr);
             $sql = str_replace('%g', $alias, $this->cfg['insert_query']);
             $sql = $this->translate($sql);
