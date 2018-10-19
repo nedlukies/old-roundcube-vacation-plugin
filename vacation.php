@@ -186,12 +186,12 @@ class vacation extends rcube_plugin {
         $out .= '<table class="propform"><tbody>';
 
         // Keep a local copy of the mail
-        $field_id = 'vacation_keepcopy';
+        /*$field_id = 'vacation_keepcopy';
         $input_localcopy = new html_checkbox(array('name' => '_vacation_keepcopy', 'id' => $field_id, 'value' => 1));
         $out .= sprintf("<tr><td class=\"title\"><label for=\"%s\">%s</label></td><td>%s</td></tr>\n",
             $field_id,
             rcube_utils::rep_specialchars_output($this->gettext('keepcopy')),
-            $input_localcopy->show($settings['keepcopy']));
+            $input_localcopy->show($settings['keepcopy'])); */
 
         // Information on the forward in a seperate fieldset.
         if (! isset($this->inicfg['disable_forward']) || ( isset($this->inicfg['disable_forward']) && $this->inicfg['disable_forward']==false))
