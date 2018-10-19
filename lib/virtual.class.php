@@ -44,13 +44,14 @@ class Virtual extends VacationDriver {
 	 * @return Array Values for the form
     */
     public function _get() {
-        $vacArr = array("subject"=>"", "body"=>"");
+        $vacArr = array("subject"=>"", "body"=>"", "activefrom"=>"", "activeuntil"=>"");
         //   print_r($vacArr);
         $fwdArr = $this->virtual_alias();
 
-        $sql = sprintf("SELECT subject,body,active FROM vacation WHERE email='%s'",
+        $sql = sprintf("SELECT subject,body,activefrom,activeuntil,active FROM vacation WHERE email='%s'",
                 rcube::Q($this->user->data['username']));
 
+		
         $res = $this->db->query($sql);
         if ($error = $this->db->is_error()) {
             rcube::raise_error(array('code' => 601, 'type' => 'db', 'file' => __FILE__,
@@ -62,6 +63,8 @@ class Virtual extends VacationDriver {
         if ($row = $this->db->fetch_assoc($res)) {
             $vacArr['body'] = $row['body'];
             $vacArr['subject'] = $row['subject'];
+            $vacArr['activefrom'] = $row['activefrom'];
+            $vacArr['activeuntil'] = $row['activeuntil'];
             //$vacArr['enabled'] = ($row['active'] == 1) && ($fwdArr['enabled'] == 1);
             $vacArr['enabled'] = $row['active'];
         }
@@ -83,7 +86,7 @@ class Virtual extends VacationDriver {
         // Sets class property
         $this->domain_id = $this->domainLookup();
 
-        $sql = sprintf("UPDATE vacation SET created=now(),active=FALSE WHERE email='%s'", rcube::Q($this->user->data['username']));
+        $sql = sprintf("UPDATE vacation SET modified=now(),active=FALSE WHERE email='%s'", rcube::Q($this->user->data['username']));
 
 
         $this->db->query($sql);
@@ -112,19 +115,18 @@ class Virtual extends VacationDriver {
         if (!$update) {
             $sql = "INSERT INTO {$this->cfg['dbase']}.vacation ".
                 "( email, subject, body, cache, domain, created, active, activefrom, activeuntil ) ".
-                "VALUES ( ?, ?, ?, '', ?, NOW(), ?, NOW(), NOW() + INTERVAL + 10 YEAR )";
+                "VALUES ( ?, ?, ?, '', ?, NOW(), ?, ?, ? )";
         } else {
-            $sql = "UPDATE {$this->cfg['dbase']}.vacation SET email=?,subject=?,body=?,domain=?,active=?, activefrom=NOW(), activeuntil=NOW() + INTERVAL + 10 YEAR WHERE email=?";
+            $sql = "UPDATE {$this->cfg['dbase']}.vacation SET modified=now(),subject=?,body=?,domain=?,active=?, activefrom=?, activeuntil=? WHERE email=?";
         }
-	      if ($this->enable == '') {
-            $this->enable = 0;
-        }
+
         $this->db->query($sql, 
-	          rcube::Q($this->user->data['username']), 
 	          $this->subject, 
 	          $this->body,
 	          $this->domain,
-	          $this->enable ? 'TRUE' : 'FALSE',
+	          $this->enable,
+                  $this->activefrom,
+                  $this->activeuntil,
 	          rcube::Q($this->user->data['username']));
         if ($error = $this->db->is_error()) {
             if (strpos($error, "no such field")) {
@@ -210,7 +212,7 @@ class Virtual extends VacationDriver {
     */
     private function createVirtualConfig(array $dsn) {
 
-        $virtual_config = "/etc/postfixadmin/";
+        $virtual_config = "/etc/mail/postfixadmin/";
         if (!is_writeable($virtual_config)) {
             rcube::raise_error(array('code' => 601, 'type' => 'php', 'file' => __FILE__,
                         'message' => "Vacation plugin: Cannot create {$virtual_config}vacation.conf . Check permissions.<br/><br/>"

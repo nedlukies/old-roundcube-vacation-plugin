@@ -1,10 +1,12 @@
 <?php
 $labels = array();
 $labels['aliases'] = 'Aliases';
-$labels['autoreply'] = "Send a notification";
+$labels['autoreply'] = "Enable out-of-office";
 $labels['autoreplybutton'] = 'Save';
 $labels['autoreplymessage'] = 'Autoreply message';
 $labels['autoreplysubject'] = 'Autoreply subject';
+$labels['activefrom'] = 'Active from';
+$labels['activeuntil'] = 'Active until';
 $labels['failed'] = 'Setting vacation failed!';
 $labels['forward'] = 'Forwarding settings';
 $labels['forwardingaddresses'] = 'Forward mail to';

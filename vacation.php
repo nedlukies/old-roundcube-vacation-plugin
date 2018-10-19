@@ -47,7 +47,10 @@ class vacation extends rcube_plugin {
         $this->register_handler('plugin.vacation_form', array($this, 'vacation_form'));
         // The vacation_aliases method is defined in vacationdriver.class.php so use $this->v here
         $this->register_action('plugin.vacation_aliases', array($this->v, 'vacation_aliases'));
+        $this->include_script('https://cdn.jsdelivr.net/npm/flatpickr@latest/dist/flatpickr.js');
+        $this->include_script('https://cdn.jsdelivr.net/npm/flatpickr@latest/dist/plugins/rangePlugin.js');
         $this->include_script('vacation.js');
+        $this->include_stylesheet('https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css');
         $this->include_stylesheet('skins/default/vacation.css');
         $this->rcmail = rcmail::get_instance();
         $this->user = $this->rcmail->user;
@@ -131,6 +134,22 @@ class vacation extends rcube_plugin {
                 rcube_utils::rep_specialchars_output($this->gettext('autoreplysubject')),
                 $input_autorespondersubject->show($settings['subject']));
 
+	// Date active from
+        $field_id = 'vacation_activefrom';
+        $input_autoresponderactivefrom = new html_inputfield(array('name' => '_vacation_activefrom', 'id' => $field_id, 'size' => 45));
+        $out .= sprintf("<tr><td class=\"title\"><label for=\"%s\">%s</label></td><td>%s</td></tr>\n",
+                $field_id,
+                rcube_utils::rep_specialchars_output($this->gettext('activefrom')),
+                $input_autoresponderactivefrom->show($settings['activefrom']));
+
+	// Date active until
+        $field_id = 'vacation_activeuntil';
+        $input_autoresponderactiveuntil = new html_inputfield(array('name' => '_vacation_activeuntil', 'id' => $field_id, 'size' => 45));
+        $out .= sprintf("<tr><td class=\"title\"><label for=\"%s\">%s</label></td><td>%s</td></tr>\n",
+                $field_id,
+                rcube_utils::rep_specialchars_output($this->gettext('activeuntil')),
+                $input_autoresponderactiveuntil->show($settings['activeuntil']));
+
         // Out of office body
         $field_id = 'vacation_body';
         $input_autoresponderbody = new html_textarea(array('name' => '_vacation_body', 'id' => $field_id, 'cols' => 88, 'rows' => 20));
@@ -177,8 +196,6 @@ class vacation extends rcube_plugin {
         // Information on the forward in a seperate fieldset.
         if (! isset($this->inicfg['disable_forward']) || ( isset($this->inicfg['disable_forward']) && $this->inicfg['disable_forward']==false))
         {
-            $out .= '<tr><td>' . $this->gettext('separate_forward') . '</td></tr>';
-
             // Forward mail to another account
             $field_id = 'vacation_forward';
             $input_autoresponderforward = new html_inputfield(array('name' => '_vacation_forward', 'id' => $field_id, 'size' => 90));

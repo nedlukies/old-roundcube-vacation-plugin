@@ -35,6 +35,14 @@ if (window.rcmail) {
 
     // add button and register command
     rcmail.register_command('plugin.vacation', function(){ rcmail.goto_url('plugin.vacation') }, true);
-   
+
+    $('#vacation_activefrom').flatpickr({
+	plugins: [new rangePlugin({ input: '#vacation_activeuntil'})],
+        enableTime: true,
+        minDate: 'today',
+        time_24hr: true,
+        dateFormat: 'Y-m-d H:i:S'
+    });
+
 });
 }
