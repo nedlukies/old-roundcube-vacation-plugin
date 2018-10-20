@@ -10,6 +10,9 @@ custom subject / message body.
 Note that the actual auto-reply is done by a program such as /usr/bin/vacation
 , the virtual user aware vacation.pl or a Sieve script.
 
+This is a version enhanced for use with postfixadmin.
+Changes to the code may have broken (or at least may not be supported) by other drivers.
+
 
 Features
 --------
@@ -22,6 +25,13 @@ The following combination of features is supported for end-users:
 An administrator can configure the following options:
 - Support for default subject and body.
 - Per host config + driver and ability to disable 'Vacation' tab on a per-host basis
+
+Enhanced postfixadmin changes include:
+- Added support for active from and active until date and time (all times are server-side)
+- Assumes a copy is always kept so that option is commented out of the UI and completely removed in the driver
+- Config.ini already set with virtual driver settings
+- Insert and Delete queries in the alias folder are replaced with update queries, assuming the mandatory alias already exists
+- Added extra tools for disabling expired vacation status and resetting the alias
 
 
 Licensing
@@ -133,13 +143,13 @@ The Virtual/SQL driver is the most advanced driver but tailored to be used with 
 This is how it works:
 
 If the vacation box gets checked by the end-user a new virtual alias will be created in the designated table as
-joe@domain.org@vacation.domain.org
+joe#domain.org@vacation.domain.org
 The 'vacation.domain.org' part is configered in config.ini (see also INSTALL.TXT) as well as /etc/postfix/master.cf
 
 joe@domain.org is passed as a for the 'vacation.pl' script that is associated with 'vacation.domain.org' transport.
 This vacation.pl fetches the mail body and subject from the database and constructs a new mail.
 
-The code is tested with a Postfix/MySQL setup based on the tutorials at http://workaround.org/ispmail/lenny
+The code is tested with a Postfix/MySQL setup based on andreoliveira.io
 It supports either normalized tables (domain_id) or non-normalized tables (domainname).
 Please see config.ini for options.
 
