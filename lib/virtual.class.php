@@ -114,7 +114,7 @@ class Virtual extends VacationDriver {
 	      // LIMIT date arbitrarily put to next century (vacation.pl doesn't like NULL value)
         if (!$update) {
             $sql = "INSERT INTO {$this->cfg['dbase']}.vacation ".
-                "( email, subject, body, cache, domain, created, active, activefrom, activeuntil ) ".
+                "( subject, body, domain, cache, active, created, activefrom, activeuntil, email ) ".
                 "VALUES ( ?, ?, ?, '', ?, NOW(), ?, ?, ? )";
         } else {
             $sql = "UPDATE {$this->cfg['dbase']}.vacation SET modified=now(),subject=?,body=?,domain=?,active=?, activefrom=?, activeuntil=? WHERE email=?";
