@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * Virtual/SQL driver
  *
  * @package	plugins
@@ -11,22 +11,24 @@
  * @todo	See README.TXT
  */
 
-class Virtual extends VacationDriver {
+class Virtual extends VacationDriver
+{
 
     private $db, $domain, $domain_id, $goto = "";
     private $db_user;
-    
-    public function init() {
+
+    public function init()
+    {
         // Use the DSN from db.inc.php or a dedicated DSN defined in config.ini
 
         if (empty($this->cfg['dsn'])) {
             $this->db = $this->rcmail->db;
             $dsn = MDB2::parseDSN($this->rcmail->config->get('db_dsnw'));
         } else {
-            $this->db = new rcube_db($this->cfg['dsn'], '', FALSE);
+            $this->db = new rcube_db($this->cfg['dsn'], '', false);
             $this->db->db_connect('w');
 
-            $this->db->set_debug((bool) $this->rcmail->config->get('sql_debug'));
+            $this->db->set_debug((bool)$this->rcmail->config->get('sql_debug'));
             $dsn = MDB2::parseDSN($this->cfg['dsn']);
             $this->db->set_debug(true);
 
@@ -40,22 +42,27 @@ class Virtual extends VacationDriver {
         }
     }
 
-    /*
-	 * @return Array Values for the form
-    */
-    public function _get() {
-        $vacArr = array("subject"=>"", "body"=>"", "activefrom"=>"", "activeuntil"=>"");
+    /**
+     * @return Array Values for the form
+     */
+    public function _get()
+    {
+        $vacArr = array("subject" => "", "body" => "", "activefrom" => "", "activeuntil" => "");
         //   print_r($vacArr);
         $fwdArr = $this->virtual_alias();
 
-        $sql = sprintf("SELECT subject,body,activefrom,activeuntil,active FROM vacation WHERE email='%s'",
-                rcube::Q($this->user->data['username']));
+        $sql = sprintf(
+            "SELECT subject,body,activefrom,activeuntil,active FROM vacation WHERE email='%s'",
+            rcube::Q($this->user->data['username'])
+        );
 
-		
+
         $res = $this->db->query($sql);
         if ($error = $this->db->is_error()) {
-            rcube::raise_error(array('code' => 601, 'type' => 'db', 'file' => __FILE__,
-                        'message' => "Vacation plugin: query on {$this->cfg['dbase']}.vacation failed. Check DSN and verify that SELECT privileges on {$this->cfg['dbase']}.vacation are granted to user '{$this->db_user}'. <br/><br/>Error message:  " . $error), true, true);
+            rcube::raise_error(array(
+                'code' => 601, 'type' => 'db', 'file' => __FILE__,
+                'message' => "Vacation plugin: query on {$this->cfg['dbase']}.vacation failed. Check DSN and verify that SELECT privileges on {$this->cfg['dbase']}.vacation are granted to user '{$this->db_user}'. <br/><br/>Error message:  " . $error
+            ), true, true);
         }
 
 
@@ -73,10 +80,11 @@ class Virtual extends VacationDriver {
         return array_merge($fwdArr, $vacArr);
     }
 
-    /*
-	 * @return boolean True on succes, false on failure
-    */
-    public function setVacation() {
+    /**
+     * @return boolean True on succes, false on failure
+     */
+    public function setVacation()
+    {
         // If there is an existing entry in the vacation table, delete it.
         // This also triggers the cascading delete on the vacation_notification, but's ok for now.
 
@@ -102,9 +110,10 @@ class Virtual extends VacationDriver {
                 $error = " Configure either domain_lookup_query or use %d in config.ini's delete_query rather than %i. <br/><br/>";
             }
 
-            rcube::raise_error(array('code' => 601, 'type' => 'db', 'file' => __FILE__,
-                        'message' => "Vacation plugin: Error while saving records to {$this->cfg['dbase']}.vacation table. <br/><br/>" . $error
-                    ), true, true);
+            rcube::raise_error(array(
+                'code' => 601, 'type' => 'db', 'file' => __FILE__,
+                'message' => "Vacation plugin: Error while saving records to {$this->cfg['dbase']}.vacation table. <br/><br/>" . $error
+            ), true, true);
 
         }
 
@@ -113,29 +122,34 @@ class Virtual extends VacationDriver {
 
 	      // LIMIT date arbitrarily put to next century (vacation.pl doesn't like NULL value)
         if (!$update) {
-            $sql = "INSERT INTO {$this->cfg['dbase']}.vacation ".
-                "( subject, body, domain, cache, active, created, activefrom, activeuntil, email ) ".
+            $sql = "INSERT INTO {$this->cfg['dbase']}.vacation " .
+                "( subject, body, domain, cache, active, created, activefrom, activeuntil, email ) " .
                 "VALUES ( ?, ?, ?, '', ?, NOW(), ?, ?, ? )";
         } else {
             $sql = "UPDATE {$this->cfg['dbase']}.vacation SET modified=now(),subject=?,body=?,domain=?,active=?, activefrom=?, activeuntil=? WHERE email=?";
         }
 
-        $this->db->query($sql, 
-	          $this->subject, 
-	          $this->body,
-	          $this->domain,
-	          $this->enable,
-                  $this->activefrom,
-                  $this->activeuntil,
-	          rcube::Q($this->user->data['username']));
+        $this->db->query(
+            $sql,
+            $this->subject,
+            $this->body,
+            $this->domain,
+            $this->enable,
+            $this->activefrom,
+            $this->activeuntil,
+            rcube::Q($this->user->data['username'])
+        );
         if ($error = $this->db->is_error()) {
             if (strpos($error, "no such field")) {
                 $error = " Configure either domain_lookup_query or use \%d in config.ini's insert_query rather than \%i<br/><br/>";
             }
 
-            rcube::raise_error(array('code' => 601, 'type' => 'db', 'file' => __FILE__,
-                        'message' => "Vacation plugin: Error while saving records to {$this->cfg['dbase']}.vacation table. <br/><br/>" . $error
-                    ), true, true);
+            rcube::raise_error(
+                array(
+                    'code' => 601, 'type' => 'db', 'file' => __FILE__,
+                    'message' => "Vacation plugin: Error while saving records to {$this->cfg['dbase']}.vacation table. <br/><br/>" . $error
+                ), true, true
+            );
         }
 
         // (Re)enable the vacation transport alias
@@ -163,35 +177,44 @@ class Virtual extends VacationDriver {
 
             $this->db->query($sql);
             if ($error = $this->db->is_error()) {
-                rcube::raise_error(array('code' => 601, 'type' => 'db', 'file' => __FILE__,
-                            'message' => "Vacation plugin: Error while executing {$this->cfg['insert_query']} <br/><br/>" . $error
-                        ), true, true);
+                rcube::raise_error(array(
+                    'code' => 601, 'type' => 'db', 'file' => __FILE__,
+                    'message' => "Vacation plugin: Error while executing {$this->cfg['insert_query']} <br/><br/>" . $error
+                ), true, true);
             }
         }
         return true;
     }
 
-    /*
-	 * @return string SQL query with substituted parameters
-    */
-    private function translate($query) {
+    /**
+     * @return string SQL query with substituted parameters
+     */
+    private function translate($query)
+    {
 	// vacation.pl assume that people won't use # as a valid mailbox character
-        return str_replace(array('%e', '%d', '%i', '%g', '%f', '%m'),
-                array($this->user->data['username'], $this->domain, $this->domain_id,
-                    rcube::Q(str_replace('@', '#', $this->user->data['username'])) . "@" . $this->cfg['transport'], $this->forward, $this->cfg['dbase']), $query);
+        return str_replace(
+            array('%e', '%d', '%i', '%g', '%f', '%m'),
+            array(
+                $this->user->data['username'], $this->domain, $this->domain_id,
+                rcube::Q(str_replace('@', '#', $this->user->data['username'])) . "@" . $this->cfg['transport'], $this->forward, $this->cfg['dbase']
+            ),
+            $query
+        );
     }
 
 // Sets %i. Lookup the domain_id based on the domainname. Returns the domainname if the query is empty
-    private function domainLookup() {
+    private function domainLookup()
+    {
         // Sets the domain
         list($username, $this->domain) = explode("@", $this->user->get_username());
         if (!empty($this->cfg['domain_lookup_query'])) {
             $res = $this->db->query($this->translate($this->cfg['domain_lookup_query']));
 
-            if (!$row= $this->db->fetch_array($res)) {
-                rcube::raise_error(array('code' => 601, 'type' => 'db', 'file' => __FILE__,
-                            'message' => "Vacation plugin: domain_lookup_query did not return any row. Check config.ini <br/><br/>" . $this->db->is_error()
-                        ), true, true);
+            if (!$row = $this->db->fetch_array($res)) {
+                rcube::raise_error(array(
+                    'code' => 601, 'type' => 'db', 'file' => __FILE__,
+                    'message' => "Vacation plugin: domain_lookup_query did not return any row. Check config.ini <br/><br/>" . $this->db->is_error()
+                ), true, true);
 
             }
             return $row[0];
@@ -200,18 +223,22 @@ class Virtual extends VacationDriver {
         }
     }
 
-    /*Creates configuration file for vacation.pl
-	 *
-	 * @param array dsn
-	 * @return void
-    */
-    private function createVirtualConfig(array $dsn) {
+    /**
+     * Creates configuration file for vacation.pl
+     *
+     * @param array $dsn dsn
+     * 
+     * @return void
+     */
+    private function createVirtualConfig(array $dsn)
+    {
 
         $virtual_config = "/etc/mail/postfixadmin/";
         if (!is_writeable($virtual_config)) {
-            rcube::raise_error(array('code' => 601, 'type' => 'php', 'file' => __FILE__,
-                        'message' => "Vacation plugin: Cannot create {$virtual_config}vacation.conf . Check permissions.<br/><br/>"
-                    ), true, true);
+            rcube::raise_error(array(
+                'code' => 601, 'type' => 'php', 'file' => __FILE__,
+                'message' => "Vacation plugin: Cannot create {$virtual_config}vacation.conf . Check permissions.<br/><br/>"
+            ), true, true);
         }
 
         // Fix for vacation.pl
@@ -232,14 +259,16 @@ class Virtual extends VacationDriver {
         }
     }
 
-    /*
-			Retrieves the localcopy and/or forward settings.
-		* @return array with virtual aliases
-    */
-    private function virtual_alias() {
+    /**
+     * Retrieves the localcopy and/or forward settings.
+     * 
+     * @return array with virtual aliases
+     */
+    private function virtual_alias()
+    {
         $forward = "";
         $enabled = false;
-	// vacation.pl assume that people won't use # as a valid mailbox character
+        // vacation.pl assume that people won't use # as a valid mailbox character
         $goto = rcube::Q(str_replace('@', '#', $this->user->data['username'])) . "@" . $this->cfg['transport'];
 
         // Backwards compatiblity. Since >=1.6 this is no longer needed
@@ -277,11 +306,14 @@ class Virtual extends VacationDriver {
 
         }
         // Substr removes any trailing comma
-        return array("forward"=>substr($forward, 0,  - 1), "keepcopy"=>$keepcopy, "enabled"=>$enabled);
+        return array("forward" => substr($forward, 0, -1), "keepcopy" => $keepcopy, "enabled" => $enabled);
     }
 
-// Destroy the database connection of our temporary database connection
-    public function __destruct() {
+    /**
+     * Destroy the database connection of our temporary database connection
+     */
+    public function __destruct()
+    {
         if (!empty($this->cfg['dsn']) && is_resource($this->db)) {
             $this->db = null;
         }

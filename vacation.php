@@ -18,7 +18,8 @@ require 'lib/dotforward.class.php';
 require 'lib/vacationfactory.class.php';
 require 'lib/VacationConfig.class.php';
 
-class vacation extends rcube_plugin {
+class vacation extends rcube_plugin
+{
 
     public $task = 'settings';
     private $v = "";
