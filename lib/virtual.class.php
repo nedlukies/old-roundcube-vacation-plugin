@@ -86,7 +86,7 @@ class Virtual extends VacationDriver
     }
 
     public function getMailbox() {
-        $res = $this->db->query(sprintf("SELECT * FROM mailbox where local_part='%s'", $this->user->get_username()));
+        $res = $this->db->query(sprintf("SELECT * FROM mailbox where username='%s'", $this->user->get_username()));
         $this->mailbox = $this->db->fetch_assoc($res);
         $this->domain = $this->mailbox['domain'];
         return $this->mailbox;
