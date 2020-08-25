@@ -17,6 +17,9 @@ class Virtual extends VacationDriver
     private $db, $domain, $domain_id, $goto = "";
     private $db_user;
 
+    private $mailbox = null;
+
+
     public function init()
     {
         // Use the DSN from db.inc.php or a dedicated DSN defined in config.ini
@@ -47,15 +50,18 @@ class Virtual extends VacationDriver
      */
     public function _get()
     {
+        ini_set('display_errors','on');
         $vacArr = array("subject" => "", "body" => "", "activefrom" => "", "activeuntil" => "");
         //   print_r($vacArr);
         $fwdArr = $this->virtual_alias();
 
+        if (!$this->mailbox) $this->getMailbox();
         $sql = sprintf(
             "SELECT subject,body,activefrom,activeuntil,active FROM vacation WHERE email='%s'",
-            rcube::Q($this->user->data['username'])
+            rcube::Q($this->mailbox['username'])
         );
 
+        echo $sql;
 
         $res = $this->db->query($sql);
         if ($error = $this->db->is_error()) {
@@ -76,8 +82,14 @@ class Virtual extends VacationDriver
             $vacArr['enabled'] = $row['active'];
         }
 
-
         return array_merge($fwdArr, $vacArr);
+    }
+
+    public function getMailbox() {
+        $res = $this->db->query(sprintf("SELECT * FROM mailbox where local_part='%s'", $this->user->get_username()));
+        $this->mailbox = $this->db->fetch_assoc($res);
+        $this->domain = $this->mailbox['domain'];
+        return $this->mailbox;
     }
 
     /**
@@ -94,7 +106,9 @@ class Virtual extends VacationDriver
         // Sets class property
         $this->domain_id = $this->domainLookup();
 
-        $sql = sprintf("UPDATE vacation SET modified=now(),active=FALSE WHERE email='%s'", rcube::Q($this->user->data['username']));
+
+
+        $sql = sprintf("UPDATE vacation SET modified=now(),active=FALSE WHERE email='%s'", rcube::Q($this->mailbox['username']));
 
 
         $this->db->query($sql);
@@ -137,7 +151,7 @@ class Virtual extends VacationDriver
             $this->enable,
             $this->activefrom,
             $this->activeuntil,
-            rcube::Q($this->user->data['username'])
+            rcube::Q($this->mailbox['username'])
         );
         if ($error = $this->db->is_error()) {
             if (strpos($error, "no such field")) {
@@ -195,8 +209,8 @@ class Virtual extends VacationDriver
         return str_replace(
             array('%e', '%d', '%i', '%g', '%f', '%m'),
             array(
-                $this->user->data['username'], $this->domain, $this->domain_id,
-                rcube::Q(str_replace('@', '#', $this->user->data['username'])) . "@" . $this->cfg['transport'], $this->forward, $this->cfg['dbase']
+                $this->mailbox['username'], $this->domain, $this->domain_id,
+                rcube::Q(str_replace('@', '#', $this->mailbox['username'])) . "@" . $this->cfg['transport'], $this->forward, $this->cfg['dbase']
             ),
             $query
         );
@@ -205,8 +219,10 @@ class Virtual extends VacationDriver
 // Sets %i. Lookup the domain_id based on the domainname. Returns the domainname if the query is empty
     private function domainLookup()
     {
+
+        if (!$this->mailbox) $this->getMailbox();
         // Sets the domain
-        list($username, $this->domain) = explode("@", $this->user->get_username());
+        list($username, $this->domain) = explode('@',$this->mailbox['username']);
         if (!empty($this->cfg['domain_lookup_query'])) {
             $res = $this->db->query($this->translate($this->cfg['domain_lookup_query']));
 
@@ -227,7 +243,7 @@ class Virtual extends VacationDriver
      * Creates configuration file for vacation.pl
      *
      * @param array $dsn dsn
-     * 
+     *
      * @return void
      */
     private function createVirtualConfig(array $dsn)
@@ -261,7 +277,7 @@ class Virtual extends VacationDriver
 
     /**
      * Retrieves the localcopy and/or forward settings.
-     * 
+     *
      * @return array with virtual aliases
      */
     private function virtual_alias()
@@ -269,7 +285,8 @@ class Virtual extends VacationDriver
         $forward = "";
         $enabled = false;
         // vacation.pl assume that people won't use # as a valid mailbox character
-        $goto = rcube::Q(str_replace('@', '#', $this->user->data['username'])) . "@" . $this->cfg['transport'];
+        if (!$this->mailbox) $this->getMailbox();
+        $goto = rcube::Q(str_replace('@', '#', $this->mailbox['username'])) . "@" . $this->cfg['transport'];
 
         // Backwards compatiblity. Since >=1.6 this is no longer needed
         $sql = str_replace("='%g'", "<>''", $this->cfg['select_query']);
@@ -292,7 +309,7 @@ class Virtual extends VacationDriver
 
         foreach ($rows as $row) {
             // Source = destination means keep a local copy
-            if ($row == $this->user->data['username']) {
+            if ($row == $this->mailbox['username']) {
                 $keepcopy = true;
             } else {
                 // Neither keepcopy or postfix transport means it's an a forward address

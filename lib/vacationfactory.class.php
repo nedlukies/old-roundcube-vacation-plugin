@@ -45,7 +45,7 @@ class VacationDriverFactory
      * 
      * @return object specific driver 
      */
-    public static function create(string $driver)
+    public static function create($driver)
     {
         $driver = strtolower($driver);
         $driverClass = sprintf("plugins/vacation/lib/%s.class.php", $driver);
