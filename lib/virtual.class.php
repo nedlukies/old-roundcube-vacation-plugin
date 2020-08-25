@@ -61,8 +61,6 @@ class Virtual extends VacationDriver
             rcube::Q($this->mailbox['username'])
         );
 
-        echo $sql;
-
         $res = $this->db->query($sql);
         if ($error = $this->db->is_error()) {
             rcube::raise_error(array(
